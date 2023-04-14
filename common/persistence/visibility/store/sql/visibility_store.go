@@ -677,7 +677,7 @@ func (s *VisibilityStore) buildSelectStmt(
 	return selectFilter, nil
 }
 
-func (s *VisibilityStore) executeSelectStmtFromListWorkflowExecutionsRequestV2(
+func (s *VisibilityStore) executeSelectStmt(
 	ctx context.Context,
 	request *manager.ListWorkflowExecutionsRequestV2,
 	selectFilter *sqlplugin.VisibilitySelectFilter,
