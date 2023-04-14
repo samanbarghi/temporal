@@ -642,7 +642,7 @@ func (s *VisibilityStore) buildQueryStringFromListRequest(
 	return strings.Join(queryTerms, " AND ")
 }
 
-func (s *VisibilityStore) buildSelectStmtFromListWorkflowExecutionsRequestV2(
+func (s *VisibilityStore) buildSelectStmt(
 	ctx context.Context,
 	request *manager.ListWorkflowExecutionsRequestV2,
 ) (*sqlplugin.VisibilitySelectFilter, error) {
