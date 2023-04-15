@@ -357,18 +357,18 @@ func (s *VisibilityStore) ListWorkflowExecutions(
 	ctx context.Context,
 	request *manager.ListWorkflowExecutionsRequestV2,
 ) (*store.InternalListWorkflowExecutionsResponse, error) {
-	selectFilter, err := s.buildSelectStmtFromListWorkflowExecutionsRequestV2(ctx, request)
+	selectFilter, err := s.buildSelectStmt(ctx, request)
 	if err != nil {
 		return nil, err
 	}
-	return s.executeSelectStmtFromListWorkflowExecutionsRequestV2(ctx, request, selectFilter)
+	return s.executeSelectStmt(ctx, request, selectFilter)
 }
 
 func (s *VisibilityStore) ScanWorkflowExecutions(
 	ctx context.Context,
 	request *manager.ListWorkflowExecutionsRequestV2,
 ) (*store.InternalListWorkflowExecutionsResponse, error) {
-	selectFilter, err := s.buildSelectStmtFromListWorkflowExecutionsRequestV2(ctx, request)
+	selectFilter, err := s.buildSelectStmt(ctx, request)
 	if err != nil {
 		return nil, err
 	}
@@ -377,7 +377,7 @@ func (s *VisibilityStore) ScanWorkflowExecutions(
 		return nil, err
 	}
 	selectFilter.Query = queryString
-	return s.executeSelectStmtFromListWorkflowExecutionsRequestV2(ctx, request, selectFilter)
+	return s.executeSelectStmt(ctx, request, selectFilter)
 }
 
 func (s *VisibilityStore) CountWorkflowExecutions(
@@ -664,7 +664,18 @@ func (s *VisibilityStore) buildSelectStmt(
 		saMapper,
 		request.Query,
 	)
-	selectFilter, err := converter.BuildSelectStmt(request.PageSize, request.NextPageToken)
+	token, err := deserializePageToken(request.NextPageToken)
+	if err != nil {
+		return nil, err
+	}
+	queryString, err := converter.convertWhereString(c.queryString)
+	if err != nil {
+		return nil, err
+	}
+	ssb := NewSelectStatementBuilder(s.GetName(), request.NamespaceID, queryString, WithToken(token), WithOrderBy())
+	queryString, queryArgs := ssb.build()
+	selectFilter := &sqlplugin.VisibilitySelectFilter{Query: queryString, QueryArgs: queryArgs}
+
 	if err != nil {
 		// Convert ConverterError to InvalidArgument and pass through all other errors (which should be only mapper errors).
 		var converterErr *query.ConverterError

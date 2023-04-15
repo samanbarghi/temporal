@@ -135,27 +135,6 @@ func newQueryConverterInternal(
 	}
 }
 
-func (c *QueryConverter) BuildSelectStmt(
-	pageSize int,
-	nextPageToken []byte,
-) (*sqlplugin.VisibilitySelectFilter, error) {
-	token, err := deserializePageToken(nextPageToken)
-	if err != nil {
-		return nil, err
-	}
-	queryString, err := c.convertWhereString(c.queryString)
-	if err != nil {
-		return nil, err
-	}
-	queryString, queryArgs := c.buildSelectStmt(
-		c.namespaceID,
-		queryString,
-		pageSize,
-		token,
-	)
-	return &sqlplugin.VisibilitySelectFilter{Query: queryString, QueryArgs: queryArgs}, nil
-}
-
 func (c *QueryConverter) BuildCountStmt() (*sqlplugin.VisibilitySelectFilter, error) {
 	queryString, err := c.convertWhereString(c.queryString)
 	if err != nil {
@@ -619,14 +598,4 @@ func isSupportedTypeRangeCond(saType enumspb.IndexedValueType) bool {
 		}
 	}
 	return false
-}
-
-func removeOrderByFromSelectQuery(queryString string) (string, error) {
-	stmt, err := sqlparser.Parse(queryString)
-	if err != nil {
-		return "", err
-	}
-	selectStmt, _ := stmt.(*sqlparser.Select)
-	selectStmt.OrderBy = nil
-	return sqlparser.String(selectStmt), nil
 }
